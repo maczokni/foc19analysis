@@ -1,4 +1,0 @@
-"0","m2 <- glm.nb(allemosum ~ foc19_w2 + a_cov + covaff_w2 + age + gender + race_coded + a_covidjob + cities, data = data, weight = weight)
-"
-"2","Error in eval(predvars, data, env) : object 'covaff_w2' not found
-"

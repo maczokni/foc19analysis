@@ -1,6 +1,0 @@
-"0","data <- read_dta(""https://www.dropbox.com/s/l0k2if9axtpu8mu/Covid-19_Police_Study_Longitudinal_W1-W3.dta?dl=1"")
-#filter out people who didn't answer foc-19 Q and choose weight to use throughout
-d
-"
-"2","Error: object 'd' not found
-"

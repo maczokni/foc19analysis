@@ -1,9 +1,0 @@
-"0","data <- data %>% 
-  mutate(more_socialising = ifelse((c_covidcompliance_1 - b_covidcompliance_1) > 0, ""Yes"", ""No""),
-         more_relaxing_out = ifelse((c_covidcompliance_2 - b_covidcompliance_2) > 0, ""Yes"", ""No"")
-         more_leisure_travel = ifelse((c_covidcompliance_3 - b_covidcompliance_3) > 0, ""Yes"", ""No"")
-"
-"2","Error: unexpected symbol in:
-""         more_relaxing_out = ifelse((c_covidcompliance_2 - b_covidcompliance_2) > 0, ""Yes"", ""No"")
-         more_leisure_travel""
-"

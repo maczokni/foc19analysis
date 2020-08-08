@@ -1,1 +1,0 @@
-{"frames":[],"message":"Error: unexpected symbol in:\n\"         more_relaxing_out = ifelse((c_covidcompliance_2 - b_covidcompliance_2) > 0, \"Yes\", \"No\")\n         more_leisure_travel\"\n"}
