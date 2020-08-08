@@ -1,0 +1,3 @@
+"0","data %>% filter(covdiff == ""Had in W3 not W2"") %>% group_by(whochangedff) %>% count()
+"
+"2","Grouping rowwise data frame strips rowwise nature"

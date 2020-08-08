@@ -1,0 +1,12 @@
+"0","qol_worry_tab <- data %>% 
+  filter(foc19_w2 != ""Unworried"" & !is.na(b_focqol)) %>% 
+  mutate(b_focqol_cat == case_when(b_focqol > 6 ~ ""Affected"", 
+                                   b_focqol < 7 ~ ""Not affected"", 
+                                   TRUE ~ NA_character_)) %>% 
+  group_by(b_focqol_cat) %>% 
+  summarise(w_n = sum(weight, na.rm = T), 
+            n = n()) %>% 
+  mutate(perc = round(w_n / sum(.$w_n)*100,0)) 
+"
+"2","Error: object 'b_focqol_cat' not found
+"

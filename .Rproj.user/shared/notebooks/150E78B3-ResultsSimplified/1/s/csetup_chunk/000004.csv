@@ -1,0 +1,8 @@
+"0","data$foc19_w2 <- factor(data$foc19_w2, levels = c(""Unworried"", ""Functional Worry"",""Dysfunctional Worry"" ))
+"
+"2","Unknown or uninitialised column: `foc19_w2`."
+"2","Error: Assigned data `factor(...)` must be compatible with existing data.
+[31mx[39m Existing data has 1208 rows.
+[31mx[39m Assigned data has 0 rows.
+[34mℹ[39m Only vectors of size 1 are recycled.
+"

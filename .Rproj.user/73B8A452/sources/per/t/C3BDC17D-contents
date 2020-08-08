@@ -1,0 +1,175 @@
+---
+title: "Willingness to engage angle"
+author: "Reka Solymosi"
+date: "16/06/2020"
+output: word_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(haven)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(forcats)
+library(nnet)
+library(stargazer)
+library(broom)
+library(MASS)
+library(dplyr)
+library(networkD3)
+library(RColorBrewer)
+library(janitor)
+library(gridExtra)
+# read in data
+data <- read_dta("https://www.dropbox.com/s/l0k2if9axtpu8mu/Covid-19_Police_Study_Longitudinal_W1-W3.dta?dl=1")
+#filter out people who didn't answer foc-19 Q and choose weight to use throughout
+data <- data %>% mutate(weight = ifelse(is.na(w1w2weight), 1, w1w2weight))
+
+data <- data %>% 
+  mutate(foc19_w2 = case_when(
+          # Unworried
+          b_foc==2 ~ "Unworried", # not worried
+          # Functional
+          b_foc==1 & # worried about catching covid in past 3 weeks
+          b_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          b_foc== 1 & # worried about covid
+            b_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+         #wave3
+         foc19_w3 = case_when(
+          # Unworried
+          c_foc==2 ~ "Unworried", # not worried
+          # Functional
+          c_foc==1 & # worried about catching covid in past 3 weeks
+          c_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          c_foc== 1 & # worried about covid
+            c_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+    ) 
+
+data$foc19_w2 <- factor(data$foc19_w2, levels = c("Unworried", "Coping","Struggling" ))
+data$foc19_w3 <- factor(data$foc19_w3, levels = c("Unworried", "Coping","Struggling" ))
+
+
+```
+
+
+Asked whether or not people engaged in the following behaviours in wave 2 and wave 3: 
+
+- Socialised in person with friends or relatives whom you don't live with 
+- Went out for a walk, run, or cycle and spent more than a few minutes sitting somewhere to relax 
+- Travelled for leisure (e.g. driven somewhere to go for a walk) 
+
+In wave 2 these were breaking the regulations, but in wave 3 they were allowed to do these. So we can say if the score goes up, they re-engaged, whereas if it stays the same or goes down (weird) then they are not re-engaging. 
+
+Coded as: calculated a re-engagement score, which is the score for the compliance items in wave 2 subtracted from the sum of the compliace items in wave 3. This means higher score means more re-engagement (0 is same engagement, negative is more engagement in wave 2 than wave 3 (shouldnt be a lot of this in theory??) and positive is more activity in wave 3 than wave 2)
+
+
+```{r reengage}
+
+data <- data %>% mutate(b_covidcompliance_1 = ifelse(b_covidcompliance_1 == 7, NA, b_covidcompliance_1), 
+                b_covidcompliance_2 = ifelse(b_covidcompliance_2 == 7, NA, b_covidcompliance_2), 
+                b_covidcompliance_3 = ifelse(b_covidcompliance_3 == 7, NA, b_covidcompliance_3),
+                c_covidcompliance_1 = ifelse(c_covidcompliance_1 == 7, NA, c_covidcompliance_1), 
+                c_covidcompliance_2 = ifelse(c_covidcompliance_2 == 7, NA, c_covidcompliance_2), 
+                c_covidcompliance_3 = ifelse(c_covidcompliance_3 == 7, NA, c_covidcompliance_3),
+                age = as_factor(age), 
+         gender = as_factor(gender), 
+         area = as_factor(area)) %>% 
+  rowwise() %>% 
+  mutate(covcompsum_w2 = sum(b_covidcompliance_1 + b_covidcompliance_2 + b_covidcompliance_3, na.rm = TRUE), 
+         covcompsum_w3 = sum(c_covidcompliance_1 + c_covidcompliance_2 + c_covidcompliance_3, na.rm = TRUE), 
+         reengage_score = covcompsum_w3 - covcompsum_w2, 
+         reengaged_yn = ifelse(reengage_score > 0, "Yes", "No"))  
+
+
+```
+
+
+```{r scorediff}
+
+ggplot(data %>% filter(!is.na(foc19_w3)), aes(x = foc19_w3, y = reengage_score, group = foc19_w3)) + 
+  geom_boxplot()
+
+
+```
+
+
+
+```{r reengagedynmod}
+
+data$reengaged_yn <- factor(data$reengaged_yn, levels = c("No","Yes" ))
+
+m1 <- glm(reengaged_yn ~ c_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(reengaged_yn ~ c_covconc + foc19_w3 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+
+
+No doesn't look like there's a difference in reengaging unless  we separate out the different activities, in that case for socialising there is a difference, but not for the other two: 
+
+
+```{r moreactivity}
+
+
+data <- data %>% 
+  mutate(more_socialising = ifelse((c_covidcompliance_1 - b_covidcompliance_1) > 0, "Yes", "No"),
+         more_relaxing_out = ifelse((c_covidcompliance_2 - b_covidcompliance_2) > 0, "Yes", "No"),
+         more_leisure_travel = ifelse((c_covidcompliance_3 - b_covidcompliance_3) > 0, "Yes", "No")
+         )
+
+
+```
+
+
+
+
+```{r socialisingmod}
+
+data$more_socialising <- factor(data$more_socialising, levels = c("No","Yes" ))
+
+m1 <- glm(more_socialising ~ c_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(more_socialising ~ c_covconc + foc19_w3 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+
+
+
+
+```{r relaxingmod}
+
+data$more_relaxing_out <- factor(data$more_relaxing_out, levels = c("No","Yes" ))
+
+m1 <- glm(more_relaxing_out ~ c_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(more_relaxing_out ~ c_covconc + foc19_w3 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+
+
+
+
+```{r travelmod}
+
+data$more_leisure_travel <- factor(data$more_leisure_travel, levels = c("No","Yes" ))
+
+m1 <- glm(more_leisure_travel ~ c_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(more_leisure_travel ~ c_covconc + foc19_w3 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+

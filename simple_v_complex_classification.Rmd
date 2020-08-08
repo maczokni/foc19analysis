@@ -1,0 +1,190 @@
+---
+title: "Classification with and without precautions"
+author: "Reka Solymosi"
+date: "21/07/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(haven)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(forcats)
+library(nnet)
+library(stargazer)
+library(broom)
+library(MASS)
+library(dplyr)
+library(networkD3)
+library(RColorBrewer)
+library(janitor)
+library(gridExtra)
+library(Hmisc)
+
+# read in data
+data <- read_dta("https://www.dropbox.com/s/l0k2if9axtpu8mu/Covid-19_Police_Study_Longitudinal_W1-W3.dta?dl=1")
+#filter out people who didn't answer foc-19 Q and choose weight to use throughout
+data <- data %>% mutate(weight = ifelse(is.na(w1w2weight), 1, w1w2weight))
+
+data <- data %>% 
+  mutate(foc19_s_w3 = case_when(
+          # Unworried
+          c_foc==2 ~ "Unworried", # not worried
+          # Functional
+          c_foc==1 & # worried about catching covid in past 3 weeks
+          c_focqol < 7   ~ "Functional Worry",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          c_foc== 1 & # worried about covid
+            c_focqol > 6  ~ "Dysfunctional Worry", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+    foc19_s_w2 = case_when(
+          # Unworried
+          b_foc==2 ~ "Unworried", # not worried
+          # Functional
+          b_foc==1 & # worried about catching covid in past 3 weeks
+          b_focqol < 7   ~ "Functional Worry",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          b_foc== 1 & # worried about covid
+            b_focqol > 6  ~ "Dysfunctional Worry", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+         #wave3
+         foc19_c_w3 = case_when(
+          # Unworried
+          c_foc==2 ~ "Unworried", # not worried
+          # Functional
+          c_foc==1 & # worried about catching covid in past 3 weeks
+            c_prec == 1 & # takes precautions
+            c_precs > 6 & # feels safer from precs
+            c_precqof < 7 & # quality of life is not reduced by precautions
+          c_focqol < 7   ~ "Functional Worry",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          c_foc== 1 & # worried about covid
+            b_focqol > 6  ~ "Dysfunctional Worry 1", #quality of life affected by worry
+         # or 
+          c_foc == 1 &  # worried about covid
+           c_prec == 2  ~ "Dysfunctional Worry 2", # and doesn't take precautions
+             # or  
+           c_foc== 1 &  # worried about covid
+             c_prec == 1 & # takes precautions
+             c_precqof > 6  ~ "Dysfunctional Worry 3", # and quality of life affected by precautions
+         # or  
+           c_foc== 1 &  # worried about covid
+             c_prec == 1 & # takes precautions
+             c_precs < 7  ~ "Dysfunctional Worry 4", #doesnt feel safer from precs
+            TRUE ~ NA_character_),
+         foc19_c_w2 = case_when(
+            # Unworried
+            b_foc==2 ~ "Unworried", # not worried
+            # Functional
+            b_foc==1 & # worried about catching covid in past 3 weeks
+            b_focqol < 7  & # quality of life not reduced by worry 
+              b_prec == 1 & # takes precautions
+              b_precs >= 6 & # feels safer from precs
+              b_precqof < 7 ~ "Functional Worry",  #  quality of life is not reduced by precautions
+           #Dysfunctional
+            b_foc== 1 & # worried about covid
+              b_focqol > 6  ~ "Dysfunctional Worry", # and quality of life affected by worry
+           # or 
+            b_foc== 1 &  # worried about covid
+             b_prec == 2  ~ "Dysfunctional Worry 2", # and doesn't take precautions
+             # or  
+           b_foc== 1 &  # worried about covid
+             b_prec == 1 & # takes precautions
+             b_precqof > 6  ~ "Dysfunctional Worry 3", # and quality of life affected by precautions
+           # or  
+           b_foc== 1 &  # worried about covid
+             b_prec == 1 & # takes precautions
+             b_precs <= 6  ~ "Dysfunctional Worry 4", #doesnt feel safer from precs
+            TRUE ~ NA_character_)    #everyone else 
+          ) 
+
+# data$foc19_c_w2 <- factor(data$foc19_c_w2, levels = c("Unworried", "Functional Worry","Dysfunctional Worry" ))
+# data$foc19_c_w3 <- factor(data$foc19_c_w3, levels = c("Unworried", "Functional Worry","Dysfunctional Worry" ))
+# data$foc19_s_w2 <- factor(data$foc19_s_w2, levels = c("Unworried", "Functional Worry","Dysfunctional Worry" ))
+# data$foc19_s_w3 <- factor(data$foc19_s_w3, levels = c("Unworried", "Functional Worry","Dysfunctional Worry" ))
+
+data <- data %>% 
+  mutate(race_coded = as_factor(race), 
+         race_coded = case_when(
+    grepl("Asian or Asian British", race_coded) |
+    grepl("Black or Black British", race_coded) |
+    grepl("Mixed", race_coded) ~ "BAME",
+    grepl("White", race_coded) ~ "White", 
+    TRUE ~ "Other or did not say"), 
+    gender = as_factor(gender)) 
+
+
+```
+
+## Complex classification with different routes to dysfunctional fear
+
+- **Dysfunctional 1** group are those who are quality of life affected by worry
+- **Dysfunctional 2** group are those who's quality of life is not affected by worry but they don't take precautions
+- **Dysfunctional 3** group are those who's quality of life is not affected by worry and they take precautions but these precautions then affect their quality of life 
+- **Dysfunctional 4** group are those who's quality of life is not affected by worry and they take precautions but these precautions do not make them feel safer
+
+#### Wave 2
+
+```{r}
+data %>% group_by(foc19_c_w2) %>% count()
+
+```
+
+#### Wave 3
+```{r}
+data %>% group_by(foc19_c_w3) %>% count()
+
+```
+
+
+
+If we sum them all then
+
+
+#### Wave 2
+
+```{r}
+data %>% 
+  mutate(foc19_c_w2 = ifelse(grepl("Dysfunc", foc19_c_w2), "Dysfunctional Worry", foc19_c_w2)) %>% 
+  group_by(foc19_c_w2) %>% count()
+
+```
+
+#### Wave 3
+
+```{r}
+data%>% 
+  mutate(foc19_c_w3 = ifelse(grepl("Dysfunc", foc19_c_w3), "Dysfunctional Worry", foc19_c_w3)) %>% group_by(foc19_c_w3) %>% count()
+
+```
+
+## Simple classification
+
+In this case we classify based on only whether or not worry affects quality of life, and don't take into account the precautions in the classification:
+
+#### Wave 2
+
+```{r}
+data %>% group_by(foc19_s_w2) %>% count()
+
+```
+
+#### Wave 3
+```{r}
+data %>% group_by(foc19_s_w3) %>% count()
+
+```
+
+
+## Run the models with the different classifications
+
+### 
+
+
+
+
+
+
+

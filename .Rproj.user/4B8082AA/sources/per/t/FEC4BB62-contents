@@ -1,0 +1,272 @@
+---
+title: "Emotions angle"
+author: "Reka Solymosi"
+date: "13/06/2020"
+output: word_document
+always_allow_html: true
+---
+
+
+The emotions angle shows the difference between the concern (b_covconc) and breaking down into the groups, so we can say from this that measuring a generic "are you worried" is not that great because it groups together the functionally/dysfunctionally worried, instead looking at the groups shows that it's those who are struggling that have these negative worry outcomes. 
+
+Models below: 
+
+(Coding notes: 
+
+For looking at each outcome separately I coded those who felt anxiety/anger/loneliness "Not at all" as No, everyone else as Yes (except NAs). For happiness it's the opposite (those who answered "not at all" are "Yes" to never felt happy) - so basically a positive outcome is a bad emotion. 
+
+For Worthwhile and Satisfied I coded "Not at all..." as "Yes" to feeling not satisfied and not worthwhile, everyone else "No".
+
+
+For those concerned, I coded Concerned + Very concerned ( b_covconc> 3) as "yes" concerned, everyone else as "No". )
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(haven)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(forcats)
+library(nnet)
+library(stargazer)
+library(broom)
+library(MASS)
+library(dplyr)
+library(networkD3)
+library(RColorBrewer)
+library(janitor)
+library(gridExtra)
+# read in data
+data <- read_dta("https://www.dropbox.com/s/l0k2if9axtpu8mu/Covid-19_Police_Study_Longitudinal_W1-W3.dta?dl=1")
+#filter out people who didn't answer foc-19 Q and choose weight to use throughout
+data <- data %>% mutate(weight = ifelse(is.na(w1w2weight), 1, w1w2weight))
+
+data <- data %>% 
+  mutate(foc19_w2 = case_when(
+          # Unworried
+          b_foc==2 ~ "Unworried", # not worried
+          # Functional
+          b_foc==1 & # worried about catching covid in past 3 weeks
+          b_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          b_foc== 1 & # worried about covid
+            b_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+         #wave3
+         foc19_w3 = case_when(
+          # Unworried
+          c_foc==2 ~ "Unworried", # not worried
+          # Functional
+          c_foc==1 & # worried about catching covid in past 3 weeks
+          c_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          c_foc== 1 & # worried about covid
+            c_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+    ) 
+
+data$foc19_w2 <- factor(data$foc19_w2, levels = c("Unworried", "Coping","Struggling" ))
+data$foc19_w3 <- factor(data$foc19_w3, levels = c("Unworried", "Coping","Struggling" ))
+
+
+```
+
+
+```{r emots}
+
+data <- data %>% 
+  mutate(felt_worried = case_when(b_covidemotion_1 != 11 & !is.na(b_covidemotion_1) ~ "Yes", 
+                                  b_covidemotion_1 == 11 ~ "No", 
+                                  is.na(b_covidemotion_1) ~ NA_character_), 
+         felt_anger = case_when(b_covidemotion_2 != 11 & !is.na(b_covidemotion_2) ~ "Yes", 
+                                  b_covidemotion_2 == 11 ~ "No", 
+                                  is.na(b_covidemotion_2) ~ NA_character_), 
+         felt_loneliness = case_when(b_covidemotion_3 != 11 & !is.na(b_covidemotion_3) ~ "Yes", 
+                                  b_covidemotion_3 == 11 ~ "No", 
+                                  is.na(b_covidemotion_3) ~ NA_character_), 
+         not_felt_happiness = case_when(b_covidemotion_4 == 11  ~ "Yes", 
+                                  b_covidemotion_4 != 11 & !is.na(b_covidemotion_4) ~ "No", 
+                                  is.na(b_covidemotion_3) ~ NA_character_), 
+         not_at_all_satisfied_w_life = case_when(b_covidsatisf == 1   ~ "Yes", 
+                                  b_covidsatisf != 1 & !is.na(b_covidsatisf) ~ "No", 
+                                  is.na(b_covidsatisf) ~ NA_character_), 
+          not_at_all_worthwhile = case_when(b_covidworth == 1   ~ "Yes", 
+                                  b_covidworth != 1 & !is.na(b_covidworth) ~ "No", 
+                                  is.na(b_covidworth) ~ NA_character_)
+         )
+
+```
+
+Felt worried: 
+
+```{r worriedmod}
+
+data$felt_worried <- factor(data$felt_worried, levels = c("No","Yes" ))
+
+m1 <- glm(felt_worried ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(felt_worried ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+Felt angry: 
+
+```{r angrymod}
+
+data$felt_anger <- factor(data$felt_anger, levels = c("No","Yes" ))
+
+m1 <- glm(felt_anger ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(felt_anger ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+Felt lonely: 
+
+```{r lonelymod}
+
+data$felt_loneliness <- factor(data$felt_loneliness, levels = c("No","Yes" ))
+
+m1 <- glm(felt_loneliness ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(felt_loneliness ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+Not at all felt happy: 
+
+```{r heppymod}
+
+data$not_felt_happiness <- factor(data$not_felt_happiness, levels = c("No","Yes" ))
+
+m1 <- glm(not_felt_happiness ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(not_felt_happiness ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+
+Not at all satisfied with life: 
+
+```{r satisfmod}
+
+data$not_at_all_satisfied_w_life <- factor(data$not_at_all_satisfied_w_life, levels = c("No","Yes" ))
+
+m1 <- glm(not_at_all_satisfied_w_life ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(not_at_all_satisfied_w_life ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+Does not feel worthwhile: 
+
+```{r worthmod}
+
+data$not_at_all_worthwhile <- factor(data$not_at_all_worthwhile, levels = c("No","Yes" ))
+
+m1 <- glm(not_at_all_worthwhile ~ b_covconc , data=data ,family=binomial(), weights = weight)
+m2 <- glm(not_at_all_worthwhile ~ b_covconc + foc19_w2 , data=data ,family=binomial(), weights = weight)
+
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+
+Emotion score: 
+
+(Note recoded, for b_covidemotion_1 through _3 11 as 1, 12 as 2, 13 as 3, 14 as 4, and 15 as 5, 
+and for b_covidemotion_4 the reverse (11 as 5, 12 as 4, 13 as 3, 14 as 2, 15 as 1), so higher score = worse emotions outcome)
+
+
+```{r emotionscore}
+
+data <- data %>%  
+  mutate(worry_n = case_when(b_covidemotion_1 == 11 ~ 1,
+                             b_covidemotion_1 == 12 ~ 2,
+                             b_covidemotion_1 == 13 ~ 3,
+                             b_covidemotion_1 == 14 ~ 4,
+                             b_covidemotion_1 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         anger_n = case_when(b_covidemotion_2 == 11 ~ 1,
+                             b_covidemotion_2 == 12 ~ 2,
+                             b_covidemotion_2 == 13 ~ 3,
+                             b_covidemotion_2 == 14 ~ 4,
+                             b_covidemotion_2 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         lonely_n = case_when(b_covidemotion_3 == 11 ~ 1,
+                             b_covidemotion_3 == 12 ~ 2,
+                             b_covidemotion_3 == 13 ~ 3,
+                             b_covidemotion_3 == 14 ~ 4,
+                             b_covidemotion_3 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         happy_n = case_when(b_covidemotion_4 == 11 ~ 5,
+                             b_covidemotion_4 == 12 ~ 4,
+                             b_covidemotion_4 == 13 ~ 3,
+                             b_covidemotion_4 == 14 ~ 2,
+                             b_covidemotion_4 == 15 ~ 1,
+                             TRUE ~ NA_real_)) %>% 
+  rowwise() %>% 
+  mutate(emosum = sum(worry_n, anger_n,  lonely_n,  happy_n, na.rm = TRUE), 
+         emosum = ifelse(emosum < 1, NA, emosum))
+
+
+m1 <- glm.nb(emosum ~ b_covconc, data = data, weight = weight)
+m2 <- glm.nb(emosum ~ b_covconc + foc19_w2, data = data, weight = weight)
+
+         
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+We can also add the satisfaction and worth scores to the sum, in that case I've recoded to match the aboves (ie fliped 1 through 5, so higher score is worse outcome): 
+
+
+```{r emoandotherscore}
+
+
+data <- data %>% mutate(satisf_reverse = case_when(b_covidsatisf == 1 ~ 5,
+                                                   b_covidsatisf == 2 ~ 4,
+                                                   b_covidsatisf == 3 ~ 3,
+                                                   b_covidsatisf == 4 ~ 2,
+                                                   b_covidsatisf == 5 ~ 1,
+                                                   TRUE ~ NA_real_), 
+                        worth_reverse = case_when(b_covidworth == 1 ~ 5,
+                                                   b_covidworth == 2 ~ 4,
+                                                   b_covidworth == 3 ~ 3,
+                                                   b_covidworth == 4 ~ 2,
+                                                   b_covidworth == 5 ~ 1,
+                                                   TRUE ~ NA_real_) ) %>% 
+  rowwise() %>% 
+  mutate(allemosum = sum(worry_n, anger_n,  lonely_n,  happy_n, satisf_reverse, worth_reverse, na.rm = TRUE), 
+         allemosum = ifelse(allemosum < 1, NA, allemosum))
+
+m1 <- glm.nb(allemosum ~ b_covconc, data = data, weight = weight)
+m2 <- glm.nb(allemosum ~ b_covconc + foc19_w2, data = data, weight = weight)
+
+         
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

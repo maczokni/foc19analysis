@@ -1,0 +1,15 @@
+"0","p3 <- data %>% filter(!is.na(foc19_w2), !is.na(felt_loneliness)) %>% 
+  group_by(foc19_w2, felt_loneliness) %>% 
+  summarise(n = sum(weight, na.rm = TRUE)) %>% 
+  mutate(perc = n/sum(n)) %>% 
+  ggplot(., aes(x = foc19_w2, y = perc, fill = felt_loneliness)) + 
+  geom_bar(stat = ""identity"", position = ""stack"", col = ""black"") + 
+  theme_minimal() + 
+  scale_fill_manual(values=c(""#FFFFFF"", ""#000000""), name = ""Felt loneliness?"") + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  xlab("""") + 
+  ylab(""Percent"") + 
+  labs(title = """")
+"
+"2","Grouping rowwise data frame strips rowwise nature"

@@ -1,0 +1,63 @@
+"0","data <- data %>%  
+  mutate(worry_n = case_when(b_covidemotion_1 == 11 ~ 1,
+                             b_covidemotion_1 == 12 ~ 2,
+                             b_covidemotion_1 == 13 ~ 3,
+                             b_covidemotion_1 == 14 ~ 4,
+                             b_covidemotion_1 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         anger_n = case_when(b_covidemotion_2 == 11 ~ 1,
+                             b_covidemotion_2 == 12 ~ 2,
+                             b_covidemotion_2 == 13 ~ 3,
+                             b_covidemotion_2 == 14 ~ 4,
+                             b_covidemotion_2 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         lonely_n = case_when(b_covidemotion_3 == 11 ~ 1,
+                             b_covidemotion_3 == 12 ~ 2,
+                             b_covidemotion_3 == 13 ~ 3,
+                             b_covidemotion_3 == 14 ~ 4,
+                             b_covidemotion_3 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         happy_n = case_when(b_covidemotion_4 == 11 ~ 5,
+                             b_covidemotion_4 == 12 ~ 4,
+                             b_covidemotion_4 == 13 ~ 3,
+                             b_covidemotion_4 == 14 ~ 2,
+                             b_covidemotion_4 == 15 ~ 1,
+                             TRUE ~ NA_real_)) %>% 
+  rowwise() %>% 
+  mutate(emosum = sum(worry_n, anger_n,  lonely_n,  happy_n, na.rm = TRUE), 
+         emosum = ifelse(emosum < 1, NA, emosum))
+data <- data %>%  
+  mutate(worry_n = case_when(b_covidemotion_1 == 11 ~ 1,
+                             b_covidemotion_1 == 12 ~ 2,
+                             b_covidemotion_1 == 13 ~ 3,
+                             b_covidemotion_1 == 14 ~ 4,
+                             b_covidemotion_1 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         anger_n = case_when(b_covidemotion_2 == 11 ~ 1,
+                             b_covidemotion_2 == 12 ~ 2,
+                             b_covidemotion_2 == 13 ~ 3,
+                             b_covidemotion_2 == 14 ~ 4,
+                             b_covidemotion_2 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         lonely_n = case_when(b_covidemotion_3 == 11 ~ 1,
+                             b_covidemotion_3 == 12 ~ 2,
+                             b_covidemotion_3 == 13 ~ 3,
+                             b_covidemotion_3 == 14 ~ 4,
+                             b_covidemotion_3 == 15 ~ 5,
+                             TRUE ~ NA_real_), 
+         happy_n = case_when(b_covidemotion_4 == 11 ~ 5,
+                             b_covidemotion_4 == 12 ~ 4,
+                             b_covidemotion_4 == 13 ~ 3,
+                             b_covidemotion_4 == 14 ~ 2,
+                             b_covidemotion_4 == 15 ~ 1,
+                             TRUE ~ NA_real_)) %>% 
+  rowwise() %>% 
+  mutate(emosum = sum(worry_n, anger_n,  lonely_n,  happy_n, na.rm = TRUE), 
+         emosum = ifelse(emosum < 1, NA, emosum))
+m1 <- glm.nb(emosum ~ b_covconc, data = data, weight = weight)
+"
+"2","iteration limit reached"
+"2","iteration limit reached"
+"0","m2 <- glm.nb(emosum ~ b_covconc + foc19_w2, data = data, weight = weight)"
+"2","iteration limit reached"
+"2","iteration limit reached"

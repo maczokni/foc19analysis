@@ -1,0 +1,7 @@
+"0","data %>% group_by(foc19_w3, ease_bi) %>% 
+  filter(!is.na(ease_bi) & !is.na(foc19_w3)) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% #sum weight 
+  mutate(percent = n / sum(n))
+"
+"2","Grouping rowwise data frame strips rowwise nature"
+"2","Factor `foc19_w3` contains implicit NA, consider using `forcats::fct_explicit_na`"

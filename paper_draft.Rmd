@@ -1,0 +1,642 @@
+---
+title: "Crime Science Paper Analysis"
+author: "Reka Solymosi"
+date: "13/06/2020"
+output: word_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(haven)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+library(forcats)
+library(nnet)
+library(stargazer)
+library(broom)
+library(MASS)
+library(dplyr)
+library(networkD3)
+library(RColorBrewer)
+library(janitor)
+library(gridExtra)
+# read in data
+data <- read_dta("https://www.dropbox.com/s/l0k2if9axtpu8mu/Covid-19_Police_Study_Longitudinal_W1-W3.dta?dl=1")
+#filter out people who didn't answer foc-19 Q and choose weight to use throughout
+data <- data %>% mutate(weight = ifelse(is.na(w1w2weight), 1, w1w2weight))
+```
+
+
+```{r newfoc19}
+data <- data %>% 
+  mutate(foc19_w2 = case_when(
+          # Unworried
+          b_foc==2 ~ "Unworried", # not worried
+          # Functional
+          b_foc==1 & # worried about catching covid in past 3 weeks
+          b_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          b_foc== 1 & # worried about covid
+            b_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+         #wave3
+         foc19_w3 = case_when(
+          # Unworried
+          c_foc==2 ~ "Unworried", # not worried
+          # Functional
+          c_foc==1 & # worried about catching covid in past 3 weeks
+          c_focqol < 7   ~ "Coping",  #  quality of life is not reduced by worry
+         #Dysfunctional
+          c_foc== 1 & # worried about covid
+            c_focqol > 6  ~ "Struggling", #quality of life affected by worry
+          TRUE ~ NA_character_),    #everyone else 
+    ) 
+
+data$foc19_w2 <- factor(data$foc19_w2, levels = c("Unworried", "Coping","Struggling" ))
+data$foc19_w3 <- factor(data$foc19_w3, levels = c("Unworried", "Coping","Struggling" ))
+
+
+```
+
+
+# Sample
+
+This data was collected as part of the ‘Policing the pandemic’ longitudinal study. We use data from the second and third waves collected between 11-14 May (wave 2) and XX - XX (wave 3) 2020. `r nrow(data %>% filter(!is.na(foc19_w2)))` 1100 people participated in wave 2 and `r nrow(data %>% filter(!is.na(foc19_w3)))` in wave 3 of the study from nine metropolitan areas across the UK (Birmingham, Cardiff, Edinburgh, Glasgow, Leeds, Liverpool, Manchester, Newcastle, and Sheffield) and London. Quota weights were calculated making the sample largely representative of these cities and metropolitan areas. We use data from Wave 2 throughout, except for exploring the link between worry and risk perception (control, likelihood, consequence), which were asked in wave 3, and to assess any movement between groups between the two waves. 
+
+
+# Defining and measuring fear of COVID-19
+
+```{r focdesc}
+
+foc_tab <- data %>% 
+  filter(!is.na(b_foc)) %>% 
+  group_by(b_foc) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% 
+  mutate(perc = round(n / sum(.$n)*100,0))
+
+freq_tab <- data %>% 
+  filter(!is.na(b_focfr)) %>% 
+  group_by(b_focfr) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% 
+  mutate(perc = round(n / sum(.$n)*100,0)) 
+
+data$b_foc_f <- as_factor(data$b_foc)
+data$b_prec_f <- as_factor(data$b_prec)
+
+```
+
+It seems that people do experience worry about COVID-19. When asked the question “In the past 3 weeks, have you ever felt worried about getting COVID-19?” in wave 2, `r foc_tab %>% filter(b_foc == 2) %>% pull(perc)`% of people said that “No”, they had not felt worried about getting COVID-19 in the past 3 weeks. From those who said “Yes”, the specific instance of worry varied in frequency and intensity.  `r freq_tab %>% filter(b_focfr == 1) %>%  pull(perc)`% of people who were worried only experienced this “Once or twice” in the last 3 weeks, while `r freq_tab %>% filter(b_focfr == 8) %>%  pull(perc)`% worried more than 10 times in this timeframe. 
+
+
+Criminological work has found that, while some instances of worry can be destructive and paralysing, people and communities have the potential to convert worry about crime into constructive action [@jackson2010functional; @jackson2009untangling]. In our study, the majority of people said ‘yes’ (`r data %>% group_by(b_prec_f) %>% summarise(n = sum(weight, na.rm = T)) %>% mutate(perc = round(n / sum(.$n)*100,0)) %>% filter(b_prec_f == "Yes") %>% pull(perc)`%) when we asked ‘do you take any precautions against getting Covid-19?’. This implies that this fear can be considered functional, as it conceivably triggered self-protective behaviours against the virus.
+
+
+Based on their worries about catching the virus, as well as the self-reported effect of their worries, we can divide research participants into one of three groups:
+
+- The ‘unworried’ group (`r data %>% group_by(foc19_w2) %>% summarise(n = sum(weight, na.rm = T)) %>% mutate(perc = round(n / sum(.$n)*100,0)) %>% filter(foc19_w2 == "Unworried") %>% pull(perc)`%): those who had not worried once about catching Covid-19 over the previous three weeks; 
+- The ‘coping’ group (`r data %>% group_by(foc19_w2) %>% summarise(n = sum(weight, na.rm = T)) %>% mutate(perc = round(n / sum(.$n)*100,0)) %>% filter(foc19_w2 == "Coping") %>% pull(perc)`%): those who had worried, but report that their quality of life was not affected by this worry; and,
+- The ‘struggling’ group (`r data %>% group_by(foc19_w2) %>% summarise(n = sum(weight, na.rm = T)) %>% mutate(perc = round(n / sum(.$n)*100,0)) %>% filter(foc19_w2 == "Struggling") %>% pull(perc)`%): those who had worried, and reported that their quality of life was affected by this worry.
+
+
+While all groups took precautions, there was a significant difference between whether or not these precautions had negative effect on people's quality of life between the different worry groups (Fig 1, Table 1). 
+
+```{r precsfig1}
+
+data <- data %>% 
+  mutate(precqof_binary = case_when(b_precqof < 7 ~ "No reduction in quality of life", 
+                                                   b_precqof > 6 ~ "Reduced quality of life")) 
+data %>% 
+  group_by(foc19_w2, precqof_binary) %>% 
+  filter(!is.na(precqof_binary)) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% #sum weight 
+  mutate(percent = n / sum(n)) %>% 
+  ggplot(., aes(x = foc19_w2, y = percent, fill = precqof_binary)) + 
+  geom_bar(stat = "identity", position = "stack", col = "black") + 
+  theme_minimal() + 
+  scale_fill_manual(values=c("#FFFFFF", "#000000"), name = "Effect of precautions \non quality of life") + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    xlab("") + 
+    ylab("Percent") + 
+  labs(title = "Extent to which precautions taken by \ndifferent worry groups affect their \nquality of life")
+
+
+```
+
+
+```{r precstable1}
+
+data$precqof_binary <- factor(data$precqof_binary, levels = c("No reduction in quality of life","Reduced quality of life" ))
+fit <- glm(precqof_binary~foc19_w2, data=data ,family=binomial(), weights = weight)
+
+stargazer(fit, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+
+
+Compared to the unworried group, the functionally worried (Coping) group have about half the odds of their precautions reducing their quality of life. On the other hand, the dysfuctionally worried (Struggling) group's precautions have well over twice the odds of the unworried group that their precautions reduce their quality of life. 
+
+
+
+Table 2 shows some descriptive statistics of these groups across demographic measures (gender, age, ethnicity), measures related to covid19 (key worker, affected by covid, had covid), mental health/emotions outcome measurses, and behavioural outcomes (takes precautions, and whether those precautions affect quality of life). 
+
+
+
+
+```{r desctable2}
+
+data <- data %>% 
+  mutate(race_coded = as_factor(race), 
+         race_coded = case_when(
+    grepl("Asian or Asian British", race_coded) |
+    grepl("Black or Black British", race_coded) |
+    grepl("Mixed", race_coded) ~ "BAME",
+    grepl("White", race_coded) ~ "White", 
+    TRUE ~ "Other or did not say"
+          )) %>% 
+  rowwise() %>% 
+  mutate(covaff_w2 = sum(b_covidaffect_1, b_covidaffect_2 , b_covidaffect_3,
+                         b_covidaffect_4, b_covidaffect_5 , b_covidaffect_6,
+                         b_covidaffect_7, b_covidaffect_8 , na.rm = T))
+    
+
+
+data %>% 
+  filter(!is.na(foc19_w2)) %>% 
+  group_by(foc19_w2) %>% 
+  summarise(
+    # num_age_16_24 = round(sum(weight[age ==1], na.rm = T),0), 
+    perc_age_16_24 = round(sum(weight[age ==1], na.rm = T)/sum(weight, na.rm = T)*100,0),
+     # num_age_25_44 = round(sum(weight[age ==2], na.rm = T),0), 
+    perc_age_25_44 = round(sum(weight[age ==2], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_age_45_64 = round(sum(weight[age ==3], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_age_65_over = round(sum(weight[age ==4], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_female = round(sum(weight[gender == 2], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_BAME = round(sum(weight[race_coded == "BAME"], na.rm = T)/sum(weight, na.rm = T)*100,0), 
+    perc_keyworker = round(sum(weight[a_covidjob != 10 & !is.na(a_covidjob)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_had_covid = round(sum(weight[b_cov != 4 & b_cov != 5 & !is.na(b_cov)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    w_mean_score_affected_by_covid = round(sum(covaff_w2*weight, na.rm = T)/sum(.$weight,na.rm = T),3), 
+    # mean_score_affected_by_covid = mean(covaff_w2, na.rm = T),
+    perc_worried = round(sum(weight[b_covconc > 3 & !is.na(b_covconc)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_felt_anxiety = round(sum(weight[b_covidemotion_1 != 11 & !is.na(b_covidemotion_1)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_felt_anger = round(sum(weight[b_covidemotion_2 != 11 & !is.na(b_covidemotion_2)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_felt_loneliness = round(sum(weight[b_covidemotion_3 != 11 & !is.na(b_covidemotion_3)], na.rm = T)/sum(weight, na.rm = T)*100,0),
+    perc_not_at_all_felt_happiness = round(sum(weight[b_covidemotion_4 == 11 & !is.na(b_covidemotion_4)], na.rm = T)/sum(weight, na.rm = T)*100,0), 
+    perc_not_at_all_satisfied_w_life = round(sum(weight[b_covidsatisf == 1 & !is.na(b_covidsatisf)], na.rm = T)/sum(weight, na.rm = T)*100,0), 
+    perc_not_at_all_worthwhile = round(sum(weight[b_covidworth == 1 & !is.na(b_covidworth)], na.rm = T)/sum(weight, na.rm = T)*100,0), 
+    
+    
+
+    
+    
+    
+  ) %>% 
+  t %>% 
+  as.data.frame %>%
+  row_to_names(row_number = 1)
+
+
+
+```
+
+
+
+
+
+**NOTES:**  
+
+- Covid affected score is the sum of b_covidaffect 1 through 8, ie the more bad stuff happened, the higher the score
+- Felt anxiety/anger/loneliness I am including anyone who didn't answer "Not at all"
+- Not at all felt happiness = only those who answered "not at all"
+- I cannot find b_ and c_ covidjob in the dataset, so I used a_covidjob
+- Worthwhile and Satisfied I just looked at "Not at all..." (can group with slightly also?)
+- Percent worried include those who answered Concerned + Very concerned ( b_covconc> 3)
+
+
+
+In wave 3 we also asked people about their perceived risk of covid-19. Specifically we asked people to estimate: 
+
+- Perceived Likelihood: "How likely do you think it is that, in the next 3 weeks, you will catch COVID-19?"
+- Perceived Severity of Consequences: "If you contracted COVID-19, how severe do you expect its consequences to be on your health?"
+- Perceived Control: "To what extent do you feel able to control whether or not, in the next 3 weeks, you will catch COVID-19?"
+
+
+```{r riskresultsfig2}
+
+data <- data %>% mutate(c_riskcn = case_when(c_riskc == 6 ~ 3,
+                                             c_riskc == 7 ~ 4,
+                                             c_riskc == 8 ~ 5, 
+                                             TRUE ~ as.numeric(c_riskc)),
+                        c_riskln = case_when(c_riskl == 6 ~ 3,
+                                             c_riskl == 7 ~ 4,
+                                             c_riskl == 8 ~ 5, 
+                                             TRUE ~ as.numeric(c_riskl)), 
+                        c_risksn = case_when(c_risks == 6 ~ 3,
+                                             c_risks == 7 ~ 4,
+                                             c_risks == 8 ~ 5, 
+                                             TRUE ~ as.numeric(c_risks)))
+
+lhood <- ggplot(data %>% filter(!is.na(foc19_w3)), aes(x = foc19_w3, y = c_riskln, group = foc19_w3)) + 
+  geom_boxplot() + 
+  theme_minimal() +
+  xlab("") + 
+  ylab("Score (higher = more perceived likelihood)") + 
+  labs(title = "Likelihood") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+severity <- ggplot(data %>% filter(!is.na(foc19_w3)), aes(x = foc19_w3, y = c_risksn, group = foc19_w3)) + 
+  geom_boxplot() + 
+  theme_minimal() +
+  xlab("") + 
+  ylab("Score (higher = more severe consequences)") + 
+  labs(title = "Consequences") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ctrl <-  ggplot(data %>% filter(!is.na(foc19_w3)), aes(x = foc19_w3, y = c_riskcn, group = foc19_w3)) + 
+  geom_boxplot() + 
+  theme_minimal()  +
+  xlab("") + 
+  ylab("Score (higher = more perceived control)") + 
+  labs(title = "Control") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+grid.arrange(lhood, severity, ctrl, nrow = 1)
+
+
+```
+
+
+Unworried group have lower perceived likelihood and severity of consequences and higher perceived control, the Coping group are in the middle, and the Struggling group have the highest perceived likelihood and perceive most severe consequences! (Fig 2, Table 3).
+
+
+```{r risktable3}
+
+
+
+lik_mod <- lm(c_riskln ~ foc19_w3, data = data, weight = weight)
+ctrl_mod <- lm(c_riskcn ~ foc19_w3, data = data, weight = weight)
+sev_mod <- lm(c_risksn ~ foc19_w3, data = data, weight = weight)
+stargazer(lik_mod, ctrl_mod, sev_mod, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+
+
+```
+
+
+# FOC19 and adherence with public health measures
+
+## Lockdown compliance in Wave 2
+
+Overall compliance score calculated from people's answers to "How often during the past week have you engaged in each of the following behaviours during the Covid-19 outbreak?" from Never (1) to Very often (5) (with Prefer not to say (7) excluded), the higher the score, the less compliance (the more they engage in non-compliant behaviours ie: Socialised in person with friends or relatives whom they don't live with, Go out for a walk, run, or cycle and spend more than a few minutes sitting somewhere to relax, and/or Travelled for leisure (e.g. driven somewhere to go for a walk)). 
+
+```{r compliance_score}
+
+data <- data %>% mutate(b_covidcompliance_1 = ifelse(b_covidcompliance_1 == 7, NA, b_covidcompliance_1), 
+                b_covidcompliance_2 = ifelse(b_covidcompliance_2 == 7, NA, b_covidcompliance_2), 
+                b_covidcompliance_3 = ifelse(b_covidcompliance_3 == 7, NA, b_covidcompliance_3), 
+                age = as_factor(age), 
+         gender = as_factor(gender), 
+         area = as_factor(area)) %>% 
+  rowwise() %>% 
+  mutate(covcompsum = sum(b_covidcompliance_1 + b_covidcompliance_2 + b_covidcompliance_3, na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+
+m01 <- glm.nb(covcompsum ~ foc19_w2, data = mod_df, weight = weight)
+m02 <- glm.nb(covcompsum ~ foc19_w2 + b_covconc, data = mod_df, weight = weight)
+m03 <- glm.nb(covcompsum ~ foc19_w2 + b_covconc + b_covknow, data = mod_df, weight = weight)
+m04 <- glm.nb(covcompsum ~ foc19_w2 + b_covconc+ b_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+stargazer(m01, m02, m03, m04, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '', omit.stat = "theta")
+```
+
+
+Group 3 (the functionally worried people), are more compliant (less non-compliant) compared with the unworried group as reference. On the other hand once more control variables in the model, dysfunctionally worried people seem to engage in these behaviours more? Maybe they really enjoy these things, and so when they restrict it affects their quality of life a lot more??
+
+On the other hand, when asking specifically for social distancing, it changes, and it is actually the dysfunctionally worried group who seem to engage in more social distancing than the unworried group, while group 2 (worried, no precautions) engage less in social distancing. Social distancing score: higher score means they engaged *more* in social distancing. 
+
+Group 2 (worried, no precautions) less likely to socialy distance, group 4 (dysfunctional) more likely than unworried group (reference) to socially distance: 
+ 
+ 
+```{r socdistmodw2}
+
+data <- data %>% rowwise() %>% 
+  mutate(sdcomplsum = sum(b_sdcompl_1 + b_sdcompl_2 + b_sdcompl_3 + 
+                           b_sdcompl_4 + b_sdcompl_5 + b_sdcompl_6 , na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+m11 <- glm.nb(sdcomplsum ~ foc19_w2, data = mod_df, weight = weight)
+m12 <- glm.nb(sdcomplsum ~ foc19_w2 + b_covconc, data = mod_df, weight = weight)
+m13 <- glm.nb(sdcomplsum ~ foc19_w2 + b_covconc + b_covknow, data = mod_df, weight = weight)
+m14 <- glm.nb(sdcomplsum ~ foc19_w2 + b_covconc+ b_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+stargazer(m11, m12, m13, m14, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '')
+
+
+```
+
+
+
+## Willingness to track, trace and isolate 
+
+This is now data from Wave 3 (both track trace and worry grouping based on w3 answers)
+
+What’s the relationship between foc19 and willingness to cooperate with these specific health measures? No realationship apparently: 
+
+```{r tracktrace}
+
+data <- data %>% rowwise() %>% 
+  mutate(tracktracesum = sum(c_tticom_1 + c_tticom_2 + c_tticom_3 , na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+tt_mod_1 <- glm.nb(tracktracesum ~ foc19_w3, data = mod_df, weight = weight)
+tt_mod_2 <- glm.nb(tracktracesum ~ foc19_w3 + c_covconc, data = mod_df, weight = weight)
+tt_mod_3 <- glm.nb(tracktracesum ~ foc19_w3 + c_covconc + c_covknow, data = mod_df, weight = weight)
+tt_mod_4 <- glm.nb(tracktracesum ~ foc19_w3 + c_covconc+ c_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+stargazer(tt_mod_1, tt_mod_2, tt_mod_3, tt_mod_4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '', omit.stat = "theta")
+
+```
+
+## Willingness to re-engage with the world as lockdown is eased 
+
+What’s the relationship between foc19 and attitudes towards the easing of the lockdown? Coping and Struggling both more likely to think government is easing lockdown at right speed vs unworried people (answered "Yes" to "At the moment, the Government is attempting to reopen the economy while at the same time keeping the rate of infection down. Do you think the lockdown is being eased at the right speed?"), with Coping x1.5 and Struggling over x2 than Unworried. Once adding control variables, this only holds for "Struggling" group. 
+
+```{r lockease}
+
+mod_df <- data %>% 
+  filter(!is.na(c_lockeas)) %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+mod_df$c_lockeas <- relevel(as_factor(mod_df$c_lockeas), ref = "No")
+
+lock_mod_1 <- glm(c_lockeas ~foc19_w3, data= mod_df,family=binomial(), weights = weight)
+lock_mod_2 <- glm(c_lockeas ~foc19_w3 + c_covconc, data= mod_df,family=binomial(), weights = weight)
+lock_mod_3 <- glm(c_lockeas ~foc19_w3 + c_covconc+ c_covknow, data=mod_df ,family=binomial(), weights = weight)
+lock_mod_4 <- glm(c_lockeas ~foc19_w3 + c_covconc+ c_covknow + age + gender + race_coded , data= mod_df,family=binomial(), weights = weight)
+
+stargazer(lock_mod_1, lock_mod_2,lock_mod_3,lock_mod_4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, omit.stat = "theta")
+
+
+
+```
+
+
+
+
+```{r lockeasechart}
+
+
+data %>% group_by(foc19_w3, c_lockeas) %>% 
+  filter(!is.na(c_lockeas) & !is.na(foc19_w3)) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% #sum weight 
+  mutate(percent = n / sum(n)) %>% 
+  ggplot(., aes(x = foc19_w3, y = percent, fill = as_factor(c_lockeas))) + 
+  geom_bar(stat = "identity", position = "stack", col = "black") + 
+  theme_minimal() + 
+  scale_fill_manual(values=c("#FFFFFF", "#000000"), name = "Is lockdown eased at right speed?") + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    xlab("") + 
+    ylab("Percent") + 
+  labs(title = "")
+
+
+```
+
+
+So the ones that do not agree with the speed, is there difference between worry groups in whether they think it's being eased too quickly (vs too slowly)? Recoded "Is the Government easing the lockdown..." "Far too quickly" and "A little too quickly" to "Quickly" and "A little too slowly" and "Far too slowly" to Slowly. "Slowly" is the reference category. SO, Coping group have higher odds (by a lot!) to want quicker easing of lockdown than Unworried group. 
+
+```{r lockeasequick}
+
+data <- data %>% mutate(ease_bi = case_when(c_locksp < 3 ~ "Quickly", 
+                                           c_locksp > 2 ~ "Slowly", 
+                                           TRUE ~ NA_character_))
+
+mod_df <- data %>% 
+  filter(!is.na(ease_bi)) %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+mod_df$ease_bi <- relevel(as_factor(mod_df$ease_bi), ref = "Slowly")
+
+lock_mod_1 <- glm(as_factor(ease_bi) ~foc19_w3, data= mod_df,family=binomial(), weights = weight)
+lock_mod_2 <- glm(as_factor(ease_bi) ~foc19_w3 + c_covconc, data= mod_df,family=binomial(), weights = weight)
+lock_mod_3 <- glm(as_factor(ease_bi) ~foc19_w3 + c_covconc+ c_covknow, data=mod_df ,family=binomial(), weights = weight)
+lock_mod_4 <- glm(as_factor(ease_bi) ~foc19_w3 + c_covconc+ c_covknow + age + gender + race_coded , data= mod_df,family=binomial(), weights = weight)
+
+stargazer(lock_mod_1, lock_mod_2,lock_mod_3,lock_mod_4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, omit.stat = "theta")
+
+
+```
+
+
+```{r lockquickchart}
+
+
+data %>% group_by(foc19_w3, ease_bi) %>% 
+  filter(!is.na(ease_bi) & !is.na(foc19_w3)) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% #sum weight 
+  mutate(percent = n / sum(n)) %>% 
+  ggplot(., aes(x = foc19_w3, y = percent, fill = as_factor(ease_bi))) + 
+  geom_bar(stat = "identity", position = "stack", col = "black") + 
+  theme_minimal() + 
+  scale_fill_manual(values=c("#FFFFFF", "#000000"), name = "Is lockdown eased too quickly/slowly?") + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    xlab("") + 
+    ylab("Percent") + 
+  labs(title = "")
+
+
+```
+
+# FOC19 and rule and political cynicism 
+
+Would it be interesting to see if people who are unworried are more likely to believe that it’s ok to bend the rules and that elites bend the rules anyway? - Seems like none of these have come out exciting... 
+
+## Legal cynicism
+
+Sum of:
+
+- People who always follow the law are fools 
+- People in power use the law to try to control people like me 
+- People with money and power can get away with anything 
+
+Strongly disagree (1) – strongly agree (5)
+
+
+```{r legalcyn}
+
+data <- data %>% rowwise() %>% 
+  mutate(legcyn = sum(c_cynlaw_1 + c_cynlaw_2 + c_cynlaw_3, na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+legcyn_m1 <- glm.nb(legcyn ~ foc19_w2, data = mod_df, weight = weight)
+legcyn_m2 <- glm.nb(legcyn ~ foc19_w2 + c_covconc, data = mod_df, weight = weight)
+legcyn_m3 <- glm.nb(legcyn ~ foc19_w2 + c_covconc + c_covknow, data = mod_df, weight = weight)
+legcyn_m4 <- glm.nb(legcyn ~ foc19_w2 + c_covconc+ c_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+
+stargazer(legcyn_m1, legcyn_m2, legcyn_m3, legcyn_m4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '', omit.stat = "theta")
+
+
+```
+
+## Life cynicism
+
+Sum of:
+
+- It's okay to do anything you want as long as you don't hurt anyone. 
+- To make money, there are no right or wrong ways anymore, only easy ways and hard ways  
+- Nowadays a person has to live pretty much for today and let tomorrow take care of itself 
+
+Strongly disagree (1) – strongly agree (5)
+
+
+```{r lifecyn}
+
+data <- data %>% rowwise() %>% 
+  mutate(lifecyn = sum(c_cynliv_1 + c_cynliv_2 + c_cynliv_3, na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+lifecyn_m1 <- glm.nb(lifecyn ~ foc19_w2, data = mod_df, weight = weight)
+lifecyn_m2 <- glm.nb(lifecyn ~ foc19_w2 + c_covconc, data = mod_df, weight = weight)
+lifecyn_m3 <- glm.nb(lifecyn ~ foc19_w2 + c_covconc + c_covknow, data = mod_df, weight = weight)
+lifecyn_m4 <- glm.nb(lifecyn ~ foc19_w2 + c_covconc+ c_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+
+stargazer(lifecyn_m1, lifecyn_m2, lifecyn_m3, lifecyn_m4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '', omit.stat = "theta")
+
+
+```
+
+## Rule cynicism
+
+
+Sum of:
+
+- It is OK to bend the rules when I need to  
+- People in my local community bend the rules when they need to 
+- People in power bend the rules when they need to 
+
+Strongly disagree (1) – strongly agree (5)
+
+
+```{r rulecyn}
+
+data <- data %>% rowwise() %>% 
+  mutate(rulecyn = sum(c_rulecyn_1 + c_rulecyn_2 + c_rulecyn_3, na.rm = TRUE))  
+
+mod_df <- data %>%
+  filter(gender != "Non-binary", race_coded != "Other or did not say") %>%
+  droplevels 
+
+mod_df$race_coded <- relevel(as_factor(mod_df$race_coded), ref = "White")
+
+
+rulecyn_m1 <- glm.nb(rulecyn ~ foc19_w2, data = mod_df, weight = weight)
+rulecyn_m2 <- glm.nb(rulecyn ~ foc19_w2 + c_covconc, data = mod_df, weight = weight)
+rulecyn_m3 <- glm.nb(rulecyn ~ foc19_w2 + c_covconc + c_covknow, data = mod_df, weight = weight)
+rulecyn_m4 <- glm.nb(rulecyn ~ foc19_w2 + c_covconc+ c_covknow + age + gender + race_coded , data = mod_df, weight = weight)
+
+stargazer(rulecyn_m1, rulecyn_m2, rulecyn_m3, rulecyn_m4, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, header = F, digit.separator = '', omit.stat = "theta")
+
+
+```
+
+
+# A note on the fluidity of these groups
+
+Finally we want to note that these categories are not deterministic, in that people may move about between them. 
+
+
+
+```{r funcworrychanges}
+
+data <- data %>% mutate(
+  whochangedff = case_when(foc19_w2 == "Unworried" & foc19_w3 == "Unworried" ~ "Stayed Unworried",
+                           foc19_w2 == "Coping" & foc19_w3 == "Coping" ~ "Stayed Coping",
+                           foc19_w2 == "Struggling" & foc19_w3 == "Struggling" ~ "Stayed Struggling",
+                           foc19_w2 == "Unworried" & foc19_w3 == "Coping" ~ "Unworried to Coping",
+                           foc19_w2 == "Unworried" & foc19_w3 == "Struggling" ~ "Unworried to Struggling", 
+                           foc19_w2 == "Coping" & foc19_w3 == "Unworried" ~ "Coping to Unworried",
+                           foc19_w2 == "Coping" & foc19_w3 == "Struggling" ~ "Coping to Struggling",
+                           foc19_w2 == "Struggling" & foc19_w3 == "Unworried" ~ "Struggling to Unworried",
+                           foc19_w2 == "Struggling" & foc19_w3 == "Coping" ~ "Struggling to Coping"), 
+  stayedsame = case_when(
+    grepl("Stayed", whochangedff) ~"stayed", 
+    grepl(" to ", whochangedff)~"changed",
+    TRUE ~ NA_character_))
+
+
+change_tab <- data %>% 
+  filter(!is.na(stayedsame)) %>% 
+  group_by(stayedsame) %>% 
+  summarise(n = sum(weight, na.rm = T)) %>% 
+  mutate(perc = round(n/sum(n,na.rm = TRUE)*100,0)) 
+```
+
+
+While most people have stayed in the same group between the two waves (`r change_tab %>% filter(stayedsame == "stayed") %>% pull(perc)`%), almost a third (`r change_tab %>% filter(stayedsame == "changed") %>% pull(perc)`%) moved between categories
+(Table x, Figure x). 
+
+```{r groupchangetable}
+data %>% filter(!is.na(whochangedff)) %>%  group_by(whochangedff) %>%  count()
+
+```
+
+
+Nicer visual:
+
+```{r sankey}
+
+sankey_df <- as.data.frame(data %>% filter(!is.na(foc19_w3) & !is.na(foc19_w2))%>% group_by(foc19_w2, foc19_w3) %>% count())
+# "source" = foc19_w2, "target" = foc19_w3, "value" = n
+
+sankey_df$foc19_w3 <- paste(sankey_df$foc19_w3, " ", sep="")
+
+# Create nodes df
+nodes <- data.frame(name=c(as.character(sankey_df$foc19_w2), as.character(sankey_df$foc19_w3)) %>% unique())
+
+# With networkD3, connection must be provided using id, not using real name like in the links dataframe.. So we need to reformat it.
+sankey_df$IDsource=match(sankey_df$foc19_w2, nodes$name)-1 
+sankey_df$IDtarget=match(sankey_df$foc19_w3, nodes$name)-1
+
+
+# Make the Network
+sankeyNetwork(Links = sankey_df, Nodes = nodes,
+              Source = "IDsource", Target = "IDtarget",
+              Value = "n", NodeID = "name")
+
+```
