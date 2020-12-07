@@ -146,6 +146,9 @@ foc19_tab <- data %>%
 
 To generate the three groups, Tables 1 and 2 break down the sample. Overall `r foc19_tab %>% filter(foc19_w2 == "Unworried") %>%  pull(perc)` % (n = `r foc19_tab %>% filter(foc19_w2 == "Unworried") %>%  pull(n)`, weighted n = `r round(foc19_tab %>% filter(foc19_w2 == "Unworried") %>%  pull(w_n), 0)`) of respondents were unworried. The other two categories – functional worry and dysfunctional worry – are subsets of the remaining `r sum(foc19_tab %>% filter(foc19_w2 != "Unworried") %>%  pull(perc))`% (n = `r sum(foc19_tab %>% filter(foc19_w2 != "Unworried") %>%  pull(n))`, weighted n = `r round(sum(foc19_tab %>% filter(foc19_w2 != "Unworried") %>%  pull(w_n)),0)`). 
 
+
+> Table 1 here
+
 ```{r}
 
 prec_tab <- data %>% 
@@ -161,12 +164,14 @@ prec_tab <- data %>%
             n = n()) %>% 
   mutate(perc = round(w_n / sum(.$w_n)*100,0)) 
 
+prec_tab
+
 ```
 
 
 Of these `r sum(foc19_tab %>% filter(foc19_w2 != "Unworried") %>%  pull(perc))`%, `r prec_tab %>% filter(prec_cons == "No precs") %>% pull(perc)`% (n = `r prec_tab %>% filter(prec_cons == "No precs") %>%  pull(n)`, weighted n = `r round(prec_tab %>% filter(prec_cons == "No precs") %>%  pull(w_n), 0)`) took no precautions, `r prec_tab %>% filter(prec_cons == "Precs and safer") %>% pull(perc)`% (n = `r prec_tab %>% filter(prec_cons == "Precs and safer") %>%  pull(n)`, weighted n = `r round(prec_tab %>% filter(prec_cons == "Precs and safer") %>%  pull(w_n), 0)`) took precautions and felt safer as a result, and `r prec_tab %>% filter(prec_cons == "Precs and not safer") %>% pull(perc)`% (n = `r prec_tab %>% filter(prec_cons == "Precs and not safer") %>%  pull(n)`, weighted n = `r round(prec_tab %>% filter(prec_cons == "Precs and not safer") %>%  pull(w_n), 0)`) took precautions but did not feel safer as a result (Table 1). We make this distinction because of the central role that beneficial precautionary activity plays in the functional/dysfunctional distinction.
 
-> Table 1 here
+
 
 
 ```{r}
@@ -199,7 +204,40 @@ By cross-tabulating precautionary activity with levels of impact on quality of l
 
 > Table 2 here
 
+```{r table2}
+
+t2v2_tab <- data %>% 
+  filter(foc19_w2 != "Unworried") %>% 
+  mutate(quol_either =case_when(b_focqol > 6 | b_precqof > 6 ~ "Affected by either or both", 
+                             b_focqol < 7 & b_precqof < 7 ~ "Not affected by either", 
+                              TRUE ~ NA_character_), 
+         prec_cons = case_when(b_prec == 2 ~ "No precs",
+                               b_prec == 1 & b_precs > 1 ~ "Precs and safer",
+                               b_prec == 1 & b_precs == 1 ~ "Precs and not safer", 
+                               TRUE ~ NA_character_))  %>% 
+  group_by(quol_either, prec_cons) %>% 
+  summarise(w_n = sum(weight, na.rm = T), 
+            n = n()) %>% 
+  mutate(perc = round(w_n / sum(.$w_n)*100,0)) 
+
+
+t2v2_tab
+
+```
+
+
 Bringing this classification process to a close, we found that just over one-third (`r foc19_tab %>% filter(foc19_w2 == "Unworried") %>% pull(perc)`% (n = `r foc19_tab %>% filter(foc19_w2 == "Unworried") %>%  pull(n)`, weighted n = `r round(foc19_tab %>% filter(foc19_w2 == "Unworried") %>%  pull(w_n), 0)`)) of the sample were unworried, about one-in-five (`r foc19_tab %>% filter(foc19_w2 == "Functional Worry") %>% pull(perc)`% (n = `r foc19_tab %>% filter(foc19_w2 == "Functional Worry") %>%  pull(n)`, weighted n = `r round(foc19_tab %>% filter(foc19_w2 == "Functional Worry") %>%  pull(w_n), 0)`)) were functionally worried, and just less than a half (`r foc19_tab %>% filter(foc19_w2 == "Dysfunctional Worry") %>% pull(perc)`% (n = `r foc19_tab %>% filter(foc19_w2 == "Dysfunctional Worry") %>%  pull(n)`, weighted n = `r round(foc19_tab %>% filter(foc19_w2 == "Dysfunctional Worry") %>%  pull(w_n), 0)`)) were dysfunctionally worried (Table 3).
+
+```{r}
+
+data %>% 
+  filter(!is.na(foc19_w2)) %>% 
+  group_by(foc19_w2) %>% 
+  summarise(w_n = sum(weight, na.rm = T), 
+            n = n()) %>% 
+  mutate(perc = round(n / sum(.$n)*100,3)) 
+
+```
 
 ## Previous experience
 
@@ -218,8 +256,57 @@ data <- data %>%
 model1 <- multinom(foc19_w2 ~ a_cov + covaff_w2, data=data)
 model2 <- multinom(foc19_w2 ~ a_cov + covaff_w2 + age + gender + race_coded + a_covidjob + cities, data=data)
 
-stargazer(model1, model2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+stargazer(model1, model2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE, report=('vcsp*'))
+# stargazer(model1, model2, type="html", p.auto=FALSE, apply.coef = exp, ci = FALSE, report=('vcsp*'), out = 'simpletable4.doc')
 ```
+
+
+```{r}
+psych::alpha(data %>% select(b_covidaffect_1, b_covidaffect_2 , b_covidaffect_3,
+                         b_covidaffect_4, b_covidaffect_5 , b_covidaffect_6,
+                         b_covidaffect_7, b_covidaffect_8) %>% replace(is.na(.),0))  
+
+```
+
+```{r}
+
+
+get_descs <- function(x){
+  
+  return(data.frame(v_num = sum(x, na.rm = T),
+                              v_perc = mean(x, na.rm = T)*100))
+  
+  
+}
+
+
+
+thing <- data %>% select(b_covidaffect_1, b_covidaffect_2 , b_covidaffect_3,
+                         b_covidaffect_4, b_covidaffect_5 , b_covidaffect_6,
+                         b_covidaffect_7, b_covidaffect_8) %>% 
+  mutate_all(as.numeric) %>% 
+  replace(is.na(.),0) %>% 
+  as_tibble() 
+
+thing2 <- data.frame(
+  name = c('b_covidaffect_1','b_covidaffect_2','b_covidaffect_3','b_covidaffect_4','b_covidaffect_5','b_covidaffect_6','b_covidaffect_7','b_covidaffect_8'),
+  num = c(get_descs(thing$b_covidaffect_1)[1][[1]],get_descs(thing$b_covidaffect_2)[1][[1]],get_descs(thing$b_covidaffect_3)[1][[1]], get_descs(thing$b_covidaffect_4)[1][[1]], get_descs(thing$b_covidaffect_5)[1][[1]], get_descs(thing$b_covidaffect_6)[1][[1]], get_descs(thing$b_covidaffect_7)[1][[1]], get_descs(thing$b_covidaffect_8)[1][[1]]),
+  perc = c(get_descs(thing$b_covidaffect_1)[2][[1]],get_descs(thing$b_covidaffect_2)[2][[1]],get_descs(thing$b_covidaffect_3)[2][[1]], get_descs(thing$b_covidaffect_4)[2][[1]], get_descs(thing$b_covidaffect_5)[2][[1]], get_descs(thing$b_covidaffect_6)[2][[1]], get_descs(thing$b_covidaffect_7)[2][[1]], get_descs(thing$b_covidaffect_8)[2][[1]])
+)
+
+thing2 %>% mutate(perc = round(perc, 1))
+```
+
+
+```{r}
+
+data %>% group_by(b_cov) %>% summarise(num = n(),
+                                       perc = num/sum(num)*100)
+
+```
+
+
+
 ## Negative outcomes on emotional well being
 
 ```{r emots}
@@ -260,7 +347,7 @@ p1 <- data %>% filter(!is.na(foc19_w2), !is.na(felt_worried)) %>%
   ggplot(., aes(x = foc19_w2, y = perc, fill = felt_worried)) + 
   geom_bar(stat = "identity", position = "stack", col = "black") + 
   theme_minimal() + 
-  scale_fill_manual(values=c("#FFFFFF", "#000000"), name = "Felt worried?") + 
+  scale_fill_manual(values=c("#FFFFFF", "#000000"), name = "Felt anxiety?") + 
   scale_y_continuous(labels = scales::percent) + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   xlab("") + 
@@ -391,11 +478,16 @@ m1 <- glm.nb(allemosum ~ foc19_w2, data = data, weight = weight)
 m2 <- glm.nb(allemosum ~ foc19_w2 + a_cov + covaff_w2 + age + gender + race_coded + a_covidjob + cities, data = data, weight = weight)
 
          
-stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
+stargazer(m1, m2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE,  report=('vcsp*'))
+#stargazer(m1, m2, type="html", p.auto=FALSE, apply.coef = exp, ci = FALSE, report=('vcsp*'), out = 'simpletable5.doc')
 
 ```
 
+```{r}
 
+psych::alpha(data %>% select(worry_n, anger_n,  lonely_n,  happy_n, satisf_reverse, worth_reverse) %>% replace(is.na(.),0))  
+
+```
 ### Note: try poisson
 
 No difference in outcome, pretty similar AIC scores too:
@@ -523,7 +615,7 @@ model1 <- multinom(foc19_w3 ~ c_riskln + c_riskcn + c_risksn, data=data)
 model2 <- multinom(foc19_w3 ~ c_riskln + c_riskcn + c_risksn + a_cov + covaff_w2 + age + gender + race_coded + a_covidjob + cities, data=data)
 
 stargazer(model1, model2, type="text", p.auto=FALSE, apply.coef = exp, ci = FALSE)
-
+# stargazer(model1, model2, type="html", p.auto=FALSE, apply.coef = exp, ci = FALSE, report=('vcsp*'), out = 'simpletable8.doc')
 
 ```
 

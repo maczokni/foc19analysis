@@ -1,0 +1,80 @@
+
+<table style="text-align:center"><tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="4"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="4" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td>Functional Worry</td><td>Dysfunctional Worry</td><td>Functional Worry</td><td>Dysfunctional Worry</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td><td>(3)</td><td>(4)</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">a_cov</td><td>1.994</td><td>0.867</td><td>1.821</td><td>0.776</td></tr>
+<tr><td style="text-align:left"></td><td>(0.226)</td><td>(0.189)</td><td>(0.276)</td><td>(0.228)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.003<sup>***</sup></td><td>p = 0.450</td><td>p = 0.030<sup>**</sup></td><td>p = 0.268</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">covaff_w2</td><td>1.035</td><td>1.611</td><td>0.931</td><td>1.617</td></tr>
+<tr><td style="text-align:left"></td><td>(0.106)</td><td>(0.095)</td><td>(0.133)</td><td>(0.114)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.742</td><td>p = 0.00000<sup>***</sup></td><td>p = 0.589</td><td>p = 0.00003<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age25-44</td><td></td><td></td><td>1.094</td><td>1.175</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.228)</td><td>(0.225)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.693</td><td>p = 0.474</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age45-64</td><td></td><td></td><td>2.158</td><td>1.673</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.313)</td><td>(0.327)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.015<sup>**</sup></td><td>p = 0.116</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age65+</td><td></td><td></td><td>2.236</td><td>2.327</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.670)</td><td>(0.696)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.230</td><td>p = 0.226</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">genderFemale</td><td></td><td></td><td>1.287</td><td>1.295</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.184)</td><td>(0.186)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.171</td><td>p = 0.165</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">race_codedWhite</td><td></td><td></td><td>0.971</td><td>1.159</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.255)</td><td>(0.256)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.908</td><td>p = 0.564</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">a_covidjob</td><td></td><td></td><td>0.981</td><td>0.961</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.034)</td><td>(0.033)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.576</td><td>p = 0.229</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesCardiff</td><td></td><td></td><td>1.150</td><td>1.122</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.491)</td><td>(0.489)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.776</td><td>p = 0.814</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesEdinburgh</td><td></td><td></td><td>1.857</td><td>1.377</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.455)</td><td>(0.465)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.174</td><td>p = 0.492</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesGlasgow</td><td></td><td></td><td>1.084</td><td>0.805</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.452)</td><td>(0.461)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.859</td><td>p = 0.637</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLeeds</td><td></td><td></td><td>1.471</td><td>2.185</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.459)</td><td>(0.435)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.400</td><td>p = 0.073<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLiverpool</td><td></td><td></td><td>1.446</td><td>1.499</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.459)</td><td>(0.449)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.422</td><td>p = 0.368</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLondon</td><td></td><td></td><td>1.295</td><td>1.274</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.368)</td><td>(0.361)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.483</td><td>p = 0.504</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesManchester</td><td></td><td></td><td>1.281</td><td>0.979</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.443)</td><td>(0.449)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.577</td><td>p = 0.963</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesNewcastle</td><td></td><td></td><td>1.037</td><td>0.799</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.527)</td><td>(0.536)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.946</td><td>p = 0.676</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesSheffield</td><td></td><td></td><td>1.846</td><td>0.591</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>(0.444)</td><td>(0.508)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td>p = 0.168</td><td>p = 0.301</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>0.061</td><td>1.162</td><td>0.057</td><td>1.395</td></tr>
+<tr><td style="text-align:left"></td><td>(0.881)</td><td>(0.728)</td><td>(1.182)</td><td>(0.991)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.002<sup>***</sup></td><td>p = 0.837</td><td>p = 0.016<sup>**</sup></td><td>p = 0.737</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td><td></td><td></td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Akaike Inf. Crit.</td><td>2,302.165</td><td>2,302.165</td><td>1,721.537</td><td>1,721.537</td></tr>
+<tr><td colspan="5" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="4" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>

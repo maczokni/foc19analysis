@@ -1,0 +1,91 @@
+
+<table style="text-align:center"><tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"></td><td colspan="2"><em>Dependent variable:</em></td></tr>
+<tr><td></td><td colspan="2" style="border-bottom: 1px solid black"></td></tr>
+<tr><td style="text-align:left"></td><td colspan="2">allemosum</td></tr>
+<tr><td style="text-align:left"></td><td>(1)</td><td>(2)</td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">foc19_w2Functional Worry</td><td>0.913</td><td>0.936</td></tr>
+<tr><td style="text-align:left"></td><td>(0.026)</td><td>(0.031)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.0005<sup>***</sup></td><td>p = 0.034<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">foc19_w2Dysfunctional Worry</td><td>1.164</td><td>1.162</td></tr>
+<tr><td style="text-align:left"></td><td>(0.021)</td><td>(0.025)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.000<sup>***</sup></td><td>p = 0.000<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">a_cov</td><td></td><td>0.977</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.031)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.443</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">covaff_w2</td><td></td><td>1.061</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.016)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.0002<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age25-44</td><td></td><td>0.946</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.029)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.057<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age45-64</td><td></td><td>0.885</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.032)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.0002<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">age65+</td><td></td><td>0.826</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.044)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.00002<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">genderFemale</td><td></td><td>1.007</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.022)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.761</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">race_codedWhite</td><td></td><td>1.097</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.039)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.017<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">a_covidjob</td><td></td><td>1.010</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.004)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.027<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesCardiff</td><td></td><td>0.955</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.049)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.355</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesEdinburgh</td><td></td><td>0.900</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.051)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.039<sup>**</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesGlasgow</td><td></td><td>0.985</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.049)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.752</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLeeds</td><td></td><td>1.003</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.049)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.958</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLiverpool</td><td></td><td>0.957</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.051)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.393</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesLondon</td><td></td><td>0.997</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.050)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.950</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesManchester</td><td></td><td>1.018</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.050)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.728</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesNewcastle</td><td></td><td>1.005</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.050)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.917</td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">citiesSheffield</td><td></td><td>0.910</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>(0.052)</td></tr>
+<tr><td style="text-align:left"></td><td></td><td>p = 0.069<sup>*</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td style="text-align:left">Constant</td><td>14.312</td><td>14.093</td></tr>
+<tr><td style="text-align:left"></td><td>(0.016)</td><td>(0.134)</td></tr>
+<tr><td style="text-align:left"></td><td>p = 0.000<sup>***</sup></td><td>p = 0.000<sup>***</sup></td></tr>
+<tr><td style="text-align:left"></td><td></td><td></td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left">Observations</td><td>1,058</td><td>780</td></tr>
+<tr><td style="text-align:left">Log Likelihood</td><td>-2,443.521</td><td>-1,619.934</td></tr>
+<tr><td style="text-align:left">theta</td><td>151.136<sup>*</sup> (77.824)</td><td>114,651.800 (1,204,052.000)</td></tr>
+<tr><td style="text-align:left">Akaike Inf. Crit.</td><td>4,893.042</td><td>3,279.869</td></tr>
+<tr><td colspan="3" style="border-bottom: 1px solid black"></td></tr><tr><td style="text-align:left"><em>Note:</em></td><td colspan="2" style="text-align:right"><sup>*</sup>p<0.1; <sup>**</sup>p<0.05; <sup>***</sup>p<0.01</td></tr>
+</table>
